@@ -1,0 +1,13 @@
+syntax:glob
+develop-eggs
+*.swp
+bin
+.installed.cfg
+*.egg-info
+.DS_Store
+.Python
+eggs
+include
+lib
+*.pyc
+

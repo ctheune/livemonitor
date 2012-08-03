@@ -1,0 +1,18 @@
+Live monitor
+------------
+
+An experimental web application using websockets and smoothie graphs to do live
+high-resolution monitoring. 
+
+It does not have a cute name.
+
+The license is 2-clause BSD. Copyright is Christian Theune.
+
+Building on OS X
+----------------
+
+* brew install libevent
+* CFLAGS="-I /opt/local/include" bin/buildout
+
+Unfortunately, zc.recipe.egg's include-dirs option doesn't help. Maybe because of clang being used.
+
