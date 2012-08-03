@@ -8,6 +8,31 @@ It does not have a cute name.
 
 The license is 2-clause BSD. Copyright is Christian Theune.
 
+Building
+--------
+
+* virtualenv .
+* bin/python bootstrap.py
+* bin/buildout
+
+Running
+-------
+
+In one terminal connect to an haproxy that offers its statistic interface at /admin/stats:
+
+* ssh -L 8092:localhost:8092 somehostrunninghaproxy
+
+Then, start the server:
+
+* bin/livemonitor
+
+Then, connect with a Websockets-capable browser:
+
+* http://localhost:5000
+
+If the haproxy isn't available when starting the server, then the server will
+crash partially.
+
 Building on OS X
 ----------------
 
@@ -15,4 +40,5 @@ Building on OS X
 * CFLAGS="-I /opt/local/include" bin/buildout
 
 Unfortunately, zc.recipe.egg's include-dirs option doesn't help. Maybe because of clang being used.
+
 
