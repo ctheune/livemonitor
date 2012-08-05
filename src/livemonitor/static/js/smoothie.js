@@ -41,7 +41,9 @@
 function TimeSeries(options) {
   options = options || {};
   options.resetBoundsInterval = options.resetBoundsInterval || 3000; // Reset the max/min bounds after this many milliseconds
-  options.resetBounds = options.resetBounds || true; // Enable or disable the resetBounds timer
+  if (!options.hasOwnProperty('resetBounds')) {
+      options.resetBounds = true;
+  }
   this.options = options;
   this.data = [];
   this.referenceSeries = options.referenceSeries || this; 

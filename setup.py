@@ -15,6 +15,7 @@ setup(
         'distribute',
         'flask',
         'gevent-websocket',
+        'repoze.debug',
     ],
     entry_points="""
         [console_scripts]

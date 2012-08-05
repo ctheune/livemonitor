@@ -1,4 +1,4 @@
-var charts = {};
+var series_index = {};
 
 var chart_options = {
     minValue: 0,
@@ -17,32 +17,62 @@ var timeseries_options = {
     fillStyle: 'rgba(0, 255, 0, 0.4)',
     lineWidth: 3};
 
-
-function setup_metric(i, name) {
-    charts[name] = {};
-    metric = charts[name];
-    metric.name = name;
-    metric.chart = new SmoothieChart(chart_options);
-    metric.chart.streamTo(document.getElementById(name), 2000);
-    metric.timeseries = new TimeSeries();
-    metric.chart.addTimeSeries(
-        metric.timeseries, timeseries_options);
-};
+// Picked palette from http://www.colourlovers.com/palette/160924/DANCE_TO_THE_CHARTS
+var strokeStyles = ["rgb(183,247,49)",
+                    "rgb(255,194,38)",
+                    "rgb(255,41,126)",
+                    "rgb(194,61,255)",
+                    "rgb(69,224,211)"];
+var fillStyles = ["rgba(183,247,49,0.2)",
+                  "rgba(255,194,38,0.2)",
+                  "rgba(255,41,126,0.2)",
+                  "rgba(194,61,255,0.2)",
+                  "rgba(69,224,211,0.2)"];
 
 
 function update_metrics(message) {
     data = $.parseJSON(message.data);
     $.each(data, function(metric, measure) {
-        charts[metric].timeseries.append(measure.time, measure.value); });
+        var timeseries = series_index[metric];
+        timeseries.append(measure.time, measure.value); });
 };
 
 
-$(document).ready(function(){
-    var metrics = ['haproxy_requests', 'haproxy_errors'];
-    $.each(metrics, setup_metric);
+function setup_charts(charts_data) {
+    var template = $('#chart_template');
+    var container = $('#charts');
 
-    charts['haproxy_errors'].timeseries.referenceSeries = charts['haproxy_requests'].timeseries;
+    $.each(charts_data, function(i, names) {
+        var chart_obj = {};
+        // Setup DOM
+        var chart_dom = template.clone();
+        chart_dom.removeAttr('style');
+        $('h3', chart_dom).text(names[0]);
+        container.append(chart_dom);
 
+        // Setup chart
+        var chart = new SmoothieChart(chart_options);
+        chart.streamTo($('canvas', chart_dom).get(0));
+
+        $.each(names, function(i, name) {
+            var timeseries = new TimeSeries();
+            var options = $.extend({}, timeseries_options);
+            options.strokeStyle = strokeStyles[i % strokeStyles.length];
+            options.fillStyle = fillStyles[i % fillStyles.length];
+            chart.addTimeSeries(timeseries, options);
+            chart_obj.timeseries = timeseries;
+            series_index[name] = timeseries;
+        });
+    });
+
+    init_websocket();
+};
+
+function init_websocket() {
     var ws = new WebSocket("ws://" + document.domain + ":5000/data");
     ws.onmessage = update_metrics;
+};
+
+$(document).ready(function(){
+    $.ajax('/charts', {dataType: 'json', success: setup_charts});
 });
