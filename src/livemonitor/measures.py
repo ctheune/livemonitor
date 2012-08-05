@@ -3,9 +3,7 @@
 class Measure(object):
 
     value = None
-
-    def __init__(self, source):
-        self.source = source
+    timestamp = 0
 
     def update(self):
         pass

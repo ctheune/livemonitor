@@ -15,7 +15,7 @@ var chart_options = {
 var timeseries_options = {
     strokeStyle: 'rgb(0, 255, 0)',
     fillStyle: 'rgba(0, 255, 0, 0.4)',
-    lineWidth: 3};
+    lineWidth: 1};
 
 // Picked palette from http://www.colourlovers.com/palette/160924/DANCE_TO_THE_CHARTS
 var strokeStyles = ["rgb(183,247,49)",
@@ -34,7 +34,8 @@ function update_metrics(message) {
     data = $.parseJSON(message.data);
     $.each(data, function(metric, measure) {
         var timeseries = series_index[metric];
-        timeseries.append(measure.time, measure.value); });
+        timeseries.append(measure.time, measure.value);
+        $('li[name="'+metric+'"] span').text(measure.value); });
 };
 
 
@@ -62,15 +63,22 @@ function setup_charts(charts_data) {
             chart.addTimeSeries(timeseries, options);
             chart_obj.timeseries = timeseries;
             series_index[name] = timeseries;
+            $('ul.labels', chart_dom).append('<li style="color:'+options.strokeStyle+'" name="'+name+'"><span></span>&nbsp;'+name+'</li>');
         });
     });
 
-    init_websocket();
+    connect();
 };
 
-function init_websocket() {
+function reconnect() {
+    setTimeout(connect, 3000)
+};
+
+function connect() {
+    console.log('Trying to connect websocket');
     var ws = new WebSocket("ws://" + document.domain + ":5000/data");
     ws.onmessage = update_metrics;
+    ws.onclose = reconnect;
 };
 
 $(document).ready(function(){

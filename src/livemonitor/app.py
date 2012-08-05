@@ -5,8 +5,8 @@ from repoze.debug.responselogger import ResponseLoggingMiddleware
 import gevent
 import json
 import livemonitor.haproxy
+import livemonitor.rand
 import logging
-import random
 import threading
 import time
 
@@ -33,7 +33,8 @@ charts = []
 def get_charts():
     return json.dumps([
         ["RequestRate", "ErrorResponses", "Error4xx", "Error5xx"],
-        ["Health"]])
+        ["Health"],
+        ["Random"]])
 
 
 ##### Data streaming
@@ -49,6 +50,8 @@ def data():
 def data_one():
     data =  {}
     for measure in measures:
+        if not hasattr(measure, 'value'):
+            continue    # XXX hack to allow the haproxy source to be in here
         data[measure.__class__.__name__] = dict(
             value=measure.value, time=int(measure.timestamp*1000))
     return json.dumps(data)
@@ -61,23 +64,26 @@ def data_websocket(ws):
         gevent.sleep(0.1)
 
 
-sources = []
 measures = []
 
 def update():
+    broken = set()
     while True:
-        for source in sources:
-            source.update()
         for measure in measures:
-            measure.update()
+            if measure in broken:
+                continue
+            try:
+                measure.update()
+            except:
+                broken.add(measure)
         time.sleep(0.1)
 
 
 def main():
-    haproxy = livemonitor.haproxy.configure()
-    sources.append(haproxy[0])
-    measures.extend(haproxy[1])
+    for module in [livemonitor.haproxy, livemonitor.rand]:
+        measures.extend(module.configure())
 
+    # XXX tune into gevent ...
     update_thread = threading.Thread(target=update)
     update_thread.setDaemon(True)
     update_thread.start()

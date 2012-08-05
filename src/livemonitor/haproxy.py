@@ -37,6 +37,8 @@ class Source(object):
 
 class RequestRate(livemonitor.measures.Measure):
 
+    value = 0
+
     def update(self):
         frontend = self.source.get_frontend()
         self.value = int(frontend['req_rate'])
@@ -90,9 +92,14 @@ class Health(livemonitor.measures.Measure):
 
 def configure():
     source = Source()
-    request_rate = RequestRate(source)
-    health = Health(source)
-    error_responses = ErrorResponses(source)
-    error_4xx = Error4xx(source)
-    error_5xx = Error5xx(source)
-    return (source, (request_rate, health, error_responses, error_4xx, error_5xx))
+    request_rate = RequestRate()
+    request_rate.source = source
+    health = Health()
+    health.source = source
+    error_responses = ErrorResponses()
+    error_responses.source = source
+    error_4xx = Error4xx()
+    error_4xx.source = source
+    error_5xx = Error5xx()
+    error_5xx.source = source
+    return [source, request_rate, health, error_responses, error_4xx, error_5xx]
